@@ -182,7 +182,7 @@ _Standardized JSON response for validation failures:_
 ## ⚙️ Tech Stack
 
 - Java 17+
-- Spring Boot 3
+- Spring Boot 4
 - Spring Data JPA
 - Hibernate
 - PostgreSQL / MySQL

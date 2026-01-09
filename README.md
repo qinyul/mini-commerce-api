@@ -2,6 +2,8 @@
 
 A Spring Boot mini project demonstrating **clean architecture**, **transactional consistency**, and **stock concurrency control**.
 
+![Mini Commerce API Architecture](./img/architecture-diagram.png)
+
 ---
 
 ## 🚀 Features

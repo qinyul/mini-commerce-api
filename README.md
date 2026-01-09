@@ -46,13 +46,17 @@ The database is normalized to 3NF, with foreign key constraints ensuring data in
 
 _The central catalog definition._
 
-| Column        | Type        | Constraints          | Description                          |
-| :------------ | :---------- | :------------------- | :----------------------------------- |
-| `id`          | `UUID`      | **PK**               | Internal unique identifier           |
-| `code`        | `VARCHAR`   | **UNIQUE**, NOT NULL | Business key / SKU (e.g., "SKU-001") |
-| `name`        | `VARCHAR`   | NOT NULL             | Display name                         |
-| `description` | `TEXT`      | NULLABLE             | Product details (Markdown supported) |
-| `created_at`  | `TIMESTAMP` | NOT NULL             | Audit timestamp                      |
+| Column        | Type        | Constraints          | Description                                |
+| :------------ | :---------- | :------------------- | :----------------------------------------- |
+| `id`          | `BIGINT`    | **PK**, Auto Inc     | Internal unique identifier                 |
+| `externalId`  | `UUID`      | **UNIQUE**, Indexed  | **Public Key:** Exposed in API URLs.       |
+| `code`        | `VARCHAR`   | **UNIQUE**, NOT NULL | Business key / SKU (e.g., "SKU-001")       |
+| `name`        | `VARCHAR`   | NOT NULL             | Display name                               |
+| `active`      | `BOOLEAN`   | Default **TRUE**     | Soft-delete flag (never delete rows).      |
+| `version`     | `BIGINT`    | NOT NULL             | Optimistic Locking: Prevents lost updates. |
+| `description` | `TEXT`      | NULLABLE             | Product details (Markdown supported)       |
+| `created_at`  | `TIMESTAMP` | NOT NULL             | Audit timestamp                            |
+| `updated_at`  | `TIMESTAMP` | NULLABLE             | Audit timestamp                            |
 
 ### `stocks`
 
@@ -60,7 +64,8 @@ _Inventory storage. One-to-One relationship with Products._
 
 | Column       | Type      | Constraints          | Description                               |
 | :----------- | :-------- | :------------------- | :---------------------------------------- |
-| `id`         | `UUID`    | **PK**               | Internal unique identifier                |
+| `id`         | `BIGINT`  | **PK**               | Internal unique identifier                |
+| `externalId` | `UUID`    | **UNIQUE**, Indexed  | **Public Key:** Exposed in API URLs.      |
 | `product_id` | `UUID`    | **FK** (products.id) | The product this stock belongs to         |
 | `quantity`   | `INTEGER` | CHECK (qty >= 0)     | **Critical:** The Available-to-Sell count |
 | `version`    | `BIGINT`  | NULLABLE             | Used for Optimistic Locking (Future use)  |
@@ -69,11 +74,13 @@ _Inventory storage. One-to-One relationship with Products._
 
 _The transaction header._
 
-| Column       | Type        | Constraints | Description                         |
-| :----------- | :---------- | :---------- | :---------------------------------- |
-| `id`         | `UUID`      | **PK**      | Internal unique identifier          |
-| `status`     | `VARCHAR`   | NOT NULL    | `PENDING`, `CONFIRMED`, `CANCELLED` |
-| `created_at` | `TIMESTAMP` | NOT NULL    | When the checkout started           |
+| Column       | Type        | Constraints         | Description                                               |
+| :----------- | :---------- | :------------------ | :-------------------------------------------------------- |
+| `id`         | `BIGINT`    | **PK**              | Internal unique identifier                                |
+| `externalId` | `UUID`      | **UNIQUE**, Indexed | **Public Key:** Exposed in API URLs.                      |
+| `status`     | `VARCHAR`   | NOT NULL            | `PENDING`, `CONFIRMED`, `CANCELLED`,`CREATED`,`COMPLETED` |
+| `version`    | `BIGINT`    | NOT NULL            | Optimistic Locking: Prevents lost updates.                |
+| `created_at` | `TIMESTAMP` | NOT NULL            | When the checkout started                                 |
 
 ### `order_items`
 
@@ -81,7 +88,7 @@ _Line items for an order. Implements "Snapshotting" pattern._
 
 | Column         | Type      | Constraints          | Description                                      |
 | :------------- | :-------- | :------------------- | :----------------------------------------------- |
-| `id`           | `UUID`    | **PK**               | Internal unique identifier                       |
+| `id`           | `BIGINT`  | **PK**               | Internal unique identifier                       |
 | `order_id`     | `UUID`    | **FK** (orders.id)   | Parent order reference                           |
 | `product_id`   | `UUID`    | **FK** (products.id) | Link to live product definition                  |
 | `quantity`     | `INTEGER` | CHECK (qty > 0)      | Number of units purchased                        |

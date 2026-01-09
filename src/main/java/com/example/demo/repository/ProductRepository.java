@@ -9,12 +9,14 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import com.example.demo.entity.Product;
 
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.QueryHint;
 
+@Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Optional<Product> findByExternalId(UUID externalId);
@@ -25,7 +27,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("select p from Product p where p.externalId = :externalId")
     Optional<Product> findForUpdate(@Param("externalId") UUID externalId);
 
-    @QueryHints({ @QueryHint(name = "javax.persistence.lock.timeout", value = "3000") })
+    @QueryHints({ @QueryHint(name = "jakarta.persistence.lock.timeout", value = "3000") })
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Product p where p.externalId IN :ids")
     List<Product> findAllByIdsWithLock(@Param("ids") List<UUID> ids);

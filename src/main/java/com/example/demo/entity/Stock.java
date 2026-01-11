@@ -1,9 +1,12 @@
 package com.example.demo.entity;
 
+import org.hibernate.envers.Audited;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 
 @Entity
+@Audited
 @Table(name = "stocks", uniqueConstraints = {
         @UniqueConstraint(name = "uk_stock_product", columnNames = "product_id")
 })

@@ -3,6 +3,8 @@ package com.example.demo.entity;
 import java.time.Instant;
 import java.util.UUID;
 
+import org.hibernate.envers.Audited;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,6 +12,7 @@ import lombok.Setter;
 @Setter
 @Getter
 @Entity
+@Audited
 @Table(name = "products", indexes = {
         @Index(name = "idx_products_external_id", columnList = "external_id"),
         @Index(name = "idx_products_code", columnList = "code")

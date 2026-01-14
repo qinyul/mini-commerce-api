@@ -11,6 +11,7 @@ A Spring Boot mini project demonstrating **clean architecture**, **transactional
 - Product management (CRUD)
 - Stock management with pessimistic locking
 - Order lifecycle with stock reservation
+- Audit Logging & Data Forensics (Time Travel)
 - Transactional consistency
 - Pagination & sorting validation
 - Swagger / OpenAPI documentation
@@ -143,6 +144,37 @@ To prevent race conditions (overselling), the system implements a strict **Pessi
 
 ---
 
+## 🕵️ Data Auditing & Forensics
+
+To address the limitations of standard `updated_by columns`, which only capture who made the last change , we have implemented a decoupled auditing workflow using **Hibernate Envers**.
+This shifts our data strategy from simply overwriting rows to maintaining a **Log-Structured Timeline**
+
+### 1. The Shadow Architecture (`_aud` Tables)
+
+Entities annotated with `@Audited` automatically generate a shadow table (e.g., `stocks_aud`). These tables utilize a Composite Primary Key to track history without overwriting data:
+
+- **Entity ID**: The original identity (e.g., `stock_id`).
+
+- **REV (Revision)**: A global "point-in-time" reference.
+
+### 2. The revinfo Global Registry
+
+Instead of bloating individual tables with user metadata, we use a centralized `revinfo` table.
+
+- **Centralized Metadata:** All changes (Stocks, Products, Orders) point back to this single table.
+
+- **Relational Power:** By joining shadow tables with revinfo, we can reconstruct a full audit trail across multiple entities in a single transaction.
+
+### 3. Performance & Optimization
+
+- **Write Path Impact:** Every `UPDATE` triggers an `INSERT` into the shadow table. This is acceptable because `INSERT` operations are cheap in modern DBs, and the value of data integrity outweighs the cost.
+
+- **Read Path Isolation:** The application never queries audit tables during standard customer requests, ensuring zero impact on user-facing read latency.
+
+- **Selective Auditing:** High-frequency, low-value fields (e.g., `last_heartbeat`) are excluded using `@NotAudited` to prevent database bloat.
+
+## This allows us to answer questions like: "What was the exact price of this SKU yesterday?".
+
 ## 📚 API Documentation
 
 Swagger UI is enabled using **springdoc-openapi**.
@@ -194,6 +226,7 @@ _Standardized JSON response for validation failures:_
 - Spring Boot 4
 - Spring Data JPA
 - Hibernate
+- Hibernate Envers (Audit & History)
 - PostgreSQL / MySQL
 - Springdoc OpenAPI
 
